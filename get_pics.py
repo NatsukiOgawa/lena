@@ -36,6 +36,16 @@ class file_name_dates_class():
 # -n: ダウンロードする画像の数量 (デフォルト 10枚)
 # -o: 画像の保存先 (デフォルト　<DEFAULT_SAVE_DIRECTORY>で指定する)
 class get_soup_class ():
+    while True:
+        print("Do you want to delete ./figure directory when this program finished ? (yes/no)")
+        ans = input()
+        if ans == "yes":
+            del_check = 0
+            break
+        elif ans == "no":
+            del_check = 1
+            break
+
     def get_soup(self, url,header):
         return bs4.BeautifulSoup(urllib.request.urlopen(urllib.request.Request(url,headers=header)),'html.parser')
 
@@ -83,15 +93,6 @@ if __name__ == '__main__':
 
     # ['get_pics.py', '-n', '3', '-s', 'no']
     # round = 3
-    while True:
-        print("Do you want to delete ./figure directory when this program finished ? (yes/no)")
-        ans = input()
-        if ans == "yes":
-            del_check = 0
-            break
-        elif ans == "no":
-            del_check = 1
-            break
     print()
     print()
     print()
