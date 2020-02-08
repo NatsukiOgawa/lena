@@ -1,163 +1,131 @@
-from tkinter import messagebox
-import bs4
-import requests
-import re
-import urllib.request, urllib.error
+# coding: utf-8
+
 import os
-import argparse
 import sys
-import json
-import os
-import time
-import datetime
+import traceback
+from mimetypes import guess_extension
+from time import time, sleep
+from urllib.request import urlopen, Request
+from urllib.parse import quote
+from bs4 import BeautifulSoup
 
+MY_EMAIL_ADDR = ''
 
-class file_name_dates_class():
-    def file_name_dates(self):
-        while True:
-            print("Do you want to delete ./figure directory when this program finished ? (yes/no)")
-            ans = input()
-            if ans == "yes":
-                del_check = 0
-                break
-            elif ans == "no":
-                del_check = 1
-                break
+class Fetcher:
+    def __init__(self, ua=''):
+        self.ua = ua
 
-        now = datetime.datetime.now()
-        now_id = now
-        now_id = str(now_id)
+    def fetch_img_direct(self, url):
+        """
+        yahoo画像検索画面に表示されている画像のbyte情報を抽出します。
+        引数:
+            url: yahoo画像検索画面のurlです。
 
-        id = ""
-        for i in range(20, 26):
-            id += str(now_id[i])
-        file_name = now.strftime('%Y' + "年" + '%m' + "月" + '%d' + "日" + '%H' + "時" + '%M' + "分" + '%S' + "秒")
-        no_mili = file_name
-        file_name += id
-        # print(file_name)
-        return file_name, no_mili
+        返り値:
+            img_b_content: ウェブサイトリソースのbyteコードのリストです。
+            mime: CONTENT_TYPEにより指定されている拡張子です。
+        """
+        req = Request(url, headers={'User-Agent': self.ua})
+        try:
+            with urlopen(req, timeout=3) as p:
+                page_b_content = p.read()
+                structured_page = BeautifulSoup(page_b_content.decode('UTF-8'), 'html.parser')
+                img_link_elems = structured_page.find_all('img')
+                img_urls = [e.get('src') for e in img_link_elems if e.get('src').startswith('http')]
+                img_urls = list(set(img_urls)) #なぜset化しているのかは不明
+        except:
+            sys.stderr.write('Error in fetching {}\n'.format(url))
+            sys.stderr.write(traceback.format_exc())
+            return None, None
 
-
-# How To
-# (1) ソースコードを保存して命名する (e.g. scrape.py)
-# (2) プログラムを起動する python scrape.py
-# (3) オプション
-# -s: Google Imagesにかける検索キーワード、複数可 (デフォルト "banana")
-# -n: ダウンロードする画像の数量 (デフォルト 10枚)
-# -o: 画像の保存先 (デフォルト　<DEFAULT_SAVE_DIRECTORY>で指定する)
-class get_soup_class ():
-    def get_soup(self, url,header):
-        return bs4.BeautifulSoup(urllib.request.urlopen(urllib.request.Request(url,headers=header)),'html.parser')
-
-    def main(self, args):
-        parser = argparse.ArgumentParser(description='Options for scraping Google images')
-        parser.add_argument('-s', '--search', default='abc', type=str, help='search term')
-        parser.add_argument('-n', '--num_images', default=0, type=int, help='num of images to scrape')
-        parser.add_argument('-o', '--directory', default='./figures', type=str, help='output directory')
-        args = parser.parse_args()
-
-        # 複数のキーワードを"+"で繋げる
-        query = args.search.split()
-        query = '+'.join(query)
-        max_images = args.num_images
-
-        # 画像をフォルダーでグループする
-        save_directory = args.directory + '/' + query
-        if not os.path.exists(save_directory):
-            os.makedirs(save_directory)
-
-        # スクレーピング
-        url="https://www.google.co.jp/search?q="+query+"&source=lnms&tbm=isch"
-        header={'User-Agent':"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.134 Safari/537.36"}
-        bbb = get_soup_class()
-        soup = bbb.get_soup(url,header)
-        ActualImages=[]
-
-        for a in soup.find_all("div",{"class":"rg_meta"}):
-            link , Type =json.loads(a.text)["ou"]  ,json.loads(a.text)["ity"]
-            ActualImages.append((link,Type))
-        for i , (img , Type) in enumerate( ActualImages[0:max_images]):
+        img_b_content = []
+        mime = []
+        for i, img_url in enumerate(img_urls):
+            req1 = Request(img_url, headers={'User-Agent': self.ua})
             try:
-                Type = Type if len(Type) > 0 else 'jpg'
-                # print("Downloading image {} ({}), type is {}".format(i, img, Type))
-                print(i)
-                raw_img = urllib.request.urlopen(img).read()
-                f = open(os.path.join(save_directory , "img_"+str(i)+"."+Type), 'wb')
-                f.write(raw_img)
-                f.close()
-            except Exception as e:
-                print ("could not load : "+img)
-                print (e)
+                with urlopen(req1, timeout=3) as p:
+                    img_b_content.append(p.read())
+                    mime.append(p.getheader('Content-Type'))
+            except:
+                sys.stderr.write('Error in fetching {}\n'.format(img_url))
+                sys.stderr.write(traceback.format_exc())
+                continue
+
+        return img_b_content, mime
+
+fetcher = Fetcher(MY_EMAIL_ADDR)
+
+def url_brancher(word):
+    """
+    yahoo画像検索画面のurlを、検索条件の組み合わせの数だけ取得します。
+
+    引数:
+        word : 検索語です。
+
+    返り値:
+        urllist : yahoo画像検索画面のurlのリストです。
+    """
+    constant = "https://search.yahoo.co.jp/image/search?p={}&n=60".format(quote(word))
+
+    values = [\
+    ["", "small"],\
+    ["", "red"],\
+    ["", "face"]\
+    ]
+    """
+    values = [\
+    ["", "small", "medium", "large", "wallpaper", "widewallpaper"],\
+    ["", "red", "orange", "yellow", "green", "teal", "blue", "purple", "pink", "white", "gray", "black", "brown"],\
+    ["", "face", "photo", "clipart", "lineart"]\
+    ]
+    """
+    urllist = []
+
+    for i in range(len(values[0])):
+        for j in range(len(values[1])):
+            for k in range(len(values[2])):
+                urllist.append(constant + "&dim={}".format(values[0][i]) + "&imc={}".format(values[1][j]) + "&ctype={}".format(values[2][k]))
+    return urllist
+
+
+
+def main(word):
+    """
+    Fetchにより取得された情報をもとに画像ファイルを保存します。
+
+    引数:
+    word: 検索語です。
+
+    返り値:
+    """
+    data_dir = 'inputs/'
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+
+    yahoo_url_list = url_brancher(word)
+
+    for i, yahoo_url in enumerate(yahoo_url_list):
+        sleep(0.1)
+        img, mime = fetcher.fetch_img_direct(yahoo_url)
+        if not mime or not img:
+            print('Error in fetching {}\n'.format(yahoo_url))
+            continue
+
+        for j, img_url in enumerate(img):
+            ext = guess_extension(mime[j].split(';')[0])
+            if ext in ('.jpe', '.jpeg'):
+                ext = '.jpg'
+            if not ext:
+                print('Error in fetching {}\n'.format(img_url))
+                continue
+
+            result_file = os.path.join(data_dir, str(i) + str(j)+ ext)
+            with open(result_file, mode='wb') as f:
+                f.write(img_url)
+            print('fetched', str(i) + str(j) + ext)
+
+
 
 if __name__ == '__main__':
-    # ['get_pics.py', '-n', '3', '-s', 'no']
-    # round = 3
-    print()
-    print()
-    print()
-    print()
-    # ;lkf:slakla;ksl;aksla;fksd
-    word_list = []
-    i = 0
-    print("Input search word")
-    while (True):
-        word = input()
-        if word=="qwerty":
-            break
-        else:
-            word_list.append(word)
-            i += 1
-            print("@@@ @@@")
-
-    print(word_list)
-    # word_list = 'one','two','three','four','five','six','seven','eight', \
-    #             'nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen'
-
-    # """
-    round = len(word_list)
-
-    from sys import argv
-    argv.append("-n")
-    argv.append('10')
-    argv.append("-s")
-    argv.append([])
-    for i in range(round):
-        argv[4] = word_list[i]  # 検索ワードを順番に代入していく
-        # argv[2] = '100'  # 取ってくる枚数
-        try:
-            aaa = get_soup_class()
-            aaa.main(argv)
-        except KeyboardInterrupt:
-            pass
-        print("@@@ @@@ @@@")
-        print("@@@ @@@ @@@")
-        print("@@@ @@@ @@@")
-        print("@@@ @@@ @@@")
-        print("@@@ @@@ @@@")
-        print()
-        print(argv)
-        print(type(argv))
-        print()
-        print("@@@ @@@ @@@")
-        print("@@@ @@@ @@@")
-        print("@@@ @@@ @@@")
-        print("@@@ @@@ @@@")
-        print("@@@ @@@ @@@")
-        print("@@@ @@@ @@@")
-        print()
-        print()
-        print()
-
-    aaa = file_name_dates_class()
-    aaa_aaa = aaa.file_name_dates()
-    os.system('git add *')
-    os.system('git commit -m "{}"'.format(aaa_aaa[1]))
-    os.system('git push')
-
-    if del_check == 0:
-        # """
-        os.system('rm -rf figures')
-        # """
-    messagebox.showinfo('通知', '全作業が終了しました.')
-    sys.exit()
-    # """
+    word = input("検索ワードを入力してください : ")
+    main(word)

@@ -1,10 +1,18 @@
 import cv2
 
 class face_identification_class():
-    def face_identification(self):
+    def face_identification(self, t):
         cascade_path = "./cascades/haarcascade_frontalface_default.xml"
 
-        image_file = "lena.jpg"
+        # image_file = "lena.jpg"
+        if t < 10:
+            t_file_name = str(t)
+            t_file_name = t_file_name.zfill(2)
+        else:
+            t_file_name = str(t)
+            # t_file_name = t_file_name.zfill(2)
+
+        image_file = "{}.jpg".format(t_file_name)
         image_path = "./inputs/" + image_file
         output_path = "./outputs/" + image_file
 
@@ -40,5 +48,7 @@ class face_identification_class():
             cv2.imwrite(output_path, image)
 
 if __name__ == '__main__':
-    aaa = face_identification_class()
-    aaa_aaa = aaa.face_identification()
+    round = 100
+    for t in range(round):
+        aaa = face_identification_class()
+        aaa_aaa = aaa.face_identification(t)
