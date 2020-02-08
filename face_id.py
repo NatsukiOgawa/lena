@@ -1,5 +1,6 @@
 from subprocess import check_output
 import cv2
+import os
 
 class face_identification_class():
     def face_identification(self, t, out_list):
@@ -46,7 +47,19 @@ class face_identification_class():
                 cv2.imwrite(output_path, image)
 
 if __name__ == '__main__':
-    round = 100
+
+    # ファイル のみ
+    os.chdir("inputs/")
+    inputs_length = [f.name for f in os.scandir() if f.is_file()]
+    os.chdir("../")
+
+    os.chdir("outputs/")
+    outputs_length = [f.name for f in os.scandir() if f.is_file()]
+    os.chdir("../")
+
+    
+    #round = 200
+    round = len(inputs_length)
     # コマンド実行
     cmd = 'ls inputs/'
     out = check_output(cmd.split()).decode('utf-8')
@@ -56,3 +69,5 @@ if __name__ == '__main__':
     for t in range(round):
         aaa = face_identification_class()
         aaa_aaa = aaa.face_identification(t, out_list)
+
+    print(len(outputs_length)/len(inputs_length))
