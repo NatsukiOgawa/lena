@@ -14,6 +14,16 @@ import datetime
 
 class file_name_dates_class():
     def file_name_dates(self):
+        while True:
+            print("Do you want to delete ./figure directory when this program finished ? (yes/no)")
+            ans = input()
+            if ans == "yes":
+                del_check = 0
+                break
+            elif ans == "no":
+                del_check = 1
+                break
+
         now = datetime.datetime.now()
         now_id = now
         now_id = str(now_id)
@@ -36,16 +46,6 @@ class file_name_dates_class():
 # -n: ダウンロードする画像の数量 (デフォルト 10枚)
 # -o: 画像の保存先 (デフォルト　<DEFAULT_SAVE_DIRECTORY>で指定する)
 class get_soup_class ():
-    while True:
-        print("Do you want to delete ./figure directory when this program finished ? (yes/no)")
-        ans = input()
-        if ans == "yes":
-            del_check = 0
-            break
-        elif ans == "no":
-            del_check = 1
-            break
-
     def get_soup(self, url,header):
         return bs4.BeautifulSoup(urllib.request.urlopen(urllib.request.Request(url,headers=header)),'html.parser')
 
@@ -90,7 +90,6 @@ class get_soup_class ():
                 print (e)
 
 if __name__ == '__main__':
-
     # ['get_pics.py', '-n', '3', '-s', 'no']
     # round = 3
     print()
@@ -151,14 +150,14 @@ if __name__ == '__main__':
 
     aaa = file_name_dates_class()
     aaa_aaa = aaa.file_name_dates()
+    """
     os.system('git add *')
     os.system('git commit -m "{}"'.format(aaa_aaa[1]))
     os.system('git push')
 
     if del_check == 0:
-        # """
         os.system('rm -rf figures')
-        # """
+    """
     messagebox.showinfo('通知', '全作業が終了しました.')
     sys.exit()
     # """
