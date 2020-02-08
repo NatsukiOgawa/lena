@@ -1,6 +1,12 @@
-for i in  range(10):
-    s = '{}'.format(i)
+import os
 
-    s_zero = s.zfill(2)
-    print(s_zero)
-    # 00001234
+os.chdir("inputs/")
+# os.system("ls")
+# ファイル のみ
+filenames = [f.name for f in os.scandir() if f.is_file()]
+
+for file in os.listdir():
+    base, ext = os.path.splitext(file)
+    if ext != '.jpg':
+        print('file:{},ext:{}'.format(file,ext))
+        os.rename("{}{}".format(file, ext), "{}{}".format(file, "jpg"))
