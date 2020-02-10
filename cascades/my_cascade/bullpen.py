@@ -38,6 +38,7 @@ class my_cascade_class():
 
 
 if __name__ == '__main__':
+    file_name = "03.jpg"
     file_name = "object.png"
     cascade_name = "cascade.xml"
 
