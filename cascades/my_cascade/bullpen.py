@@ -25,3 +25,10 @@ else:
     cv2.waitKey(0)
     # 画像windowを閉じる
     cv2.destroyAllWindows()
+
+
+
+    """
+    opencv_createsamples -img ./pos/pika.jpg -vec ./vec/image.vec -num 50 -bgcolor 255 -maxidev 40 -maxxangle 0.8 -maxyangle 0.8 -maxzangle 0.5 -show
+    <コマンド名           > -img <正解画像のpath> -vec ./vec/image.vec -num <サンプルにする画像数> -bgcolor 255 -maxidev 40 -maxxangle 0.8 -maxyangle 0.8 -maxzangle 0.5 -show
+    """
