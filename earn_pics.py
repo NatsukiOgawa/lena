@@ -98,7 +98,7 @@ def main(word):
 
     返り値:
     """
-    data_dir = 'inputs/'
+    data_dir = '/home/natsukiogawa/デスクトップ'   ### 画像を保存する場所(ターミナルで「pwd」 を実行して返ってきた文字列)
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
 
